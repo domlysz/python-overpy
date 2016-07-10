@@ -289,7 +289,7 @@ class Result(object):
         for event, child in root:
             if event == 'start':
                 if child.tag.lower() == 'bounds':
-                    result._bounds = child.attrib
+                    result._bounds = {k:float(v) for k, v in child.attrib.items()}
                 if child.tag.lower() in elem_clss:
                     elem_cls = elem_clss[child.tag.lower()]
                     result.append(elem_cls.from_xml(child, result=result))
