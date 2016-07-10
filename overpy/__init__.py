@@ -178,6 +178,7 @@ class Result(object):
                                       for element in elements if is_valid_type(element, Relation))
         self._class_collection_map = {Node: self._nodes, Way: self._ways, Relation: self._relations}
         self.api = api
+        self._bounds = {}
 
     def expand(self, other):
         """
@@ -287,6 +288,8 @@ class Result(object):
         elem_clss = {'node':Node, 'way':Way, 'relation':Relation}
         for event, child in root:
             if event == 'start':
+                if child.tag.lower() == 'bounds':
+                    result._bounds = child.attrib
                 if child.tag.lower() in elem_clss:
                     elem_cls = elem_clss[child.tag.lower()]
                     result.append(elem_cls.from_xml(child, result=result))
@@ -430,13 +433,22 @@ class Result(object):
         """
         return self.get_elements(Way, elem_id=way_id, **kwargs)
 
+    def get_bounds(self):
+        if not self._bounds:
+            lons, lats = zip(*[(e.lon, e.lat) for e in self._nodes.values()])
+            self._bounds['minlon'] = float(min(lons))
+            self._bounds['maxlon'] = float(max(lons))
+            self._bounds['minlat'] = float(min(lats))
+            self._bounds['maxlat'] = float(max(lats))
+        return self._bounds
+
     node_ids = property(get_node_ids)
     nodes = property(get_nodes)
     relation_ids = property(get_relation_ids)
     relations = property(get_relations)
     way_ids = property(get_way_ids)
     ways = property(get_ways)
-
+    bounds = property(get_bounds)
 
 class Element(object):
 
