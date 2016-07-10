@@ -146,11 +146,13 @@ class Overpass(object):
         :rtype: overpy.Result
         """
 
-        if isinstance(data, bytes):
-            data = data.decode(encoding)
-        if PY2 and not isinstance(data, str):
-            # Python 2.x: Convert unicode strings
-            data = data.encode(encoding)
+        if not os.path.exists(data):
+
+            if isinstance(data, bytes):
+                data = data.decode(encoding)
+            if PY2 and not isinstance(data, str):
+                # Python 2.x: Convert unicode strings
+                data = data.encode(encoding)
 
         return Result.from_xml(data, api=self)
 
@@ -279,8 +281,9 @@ class Result(object):
         """
         result = cls(api=api)
 
-        source = StringIO(data)
-        root = ET.iterparse(source, events=("start", "end"))
+        if not os.path.exists(data):
+            data = StringIO(data)
+        root = ET.iterparse(data, events=("start", "end"))
         elem_clss = {'node':Node, 'way':Way, 'relation':Relation}
         for event, child in root:
             if event == 'start':
@@ -291,7 +294,6 @@ class Result(object):
                 child.clear()
 
         return result
-
 
     def get_node(self, node_id, resolve_missing=False):
         """
