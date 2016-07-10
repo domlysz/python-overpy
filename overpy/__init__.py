@@ -286,13 +286,16 @@ class Result(object):
         """
         result = cls(api=api)
         if parser == XML_PARSER_DOM:
-            import xml.etree.ElementTree as ET
-            root = ET.fromstring(data)
-
-            for elem_cls in [Node, Way, Relation]:
-                for child in root:
-                    if child.tag.lower() == elem_cls._type_value:
+            source = StringIO(data)
+            root = ET.iterparse(source, events=("start", "end"))
+            elem_clss = {'node':Node, 'way':Way, 'relation':Relation}
+            for event, child in root:
+                if event == 'start':
+                    if child.tag.lower() in elem_clss:
+                        elem_cls = elem_clss[child.tag.lower()]
                         result.append(elem_cls.from_xml(child, result=result))
+                elif event == 'end':
+                    child.clear()
 
         elif parser == XML_PARSER_SAX:
             if PY2:
